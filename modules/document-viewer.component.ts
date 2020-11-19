@@ -68,9 +68,12 @@ export class NgxDocViewerComponent implements OnChanges, OnDestroy {
     public configuredViewer: viewerType = 'google';
     private checkIFrameSubscription: Subscription = null;
 
+    private loadCount = 0
+
     constructor(private domSanitizer: DomSanitizer, private ngZone: NgZone) { }
 
     ngOnDestroy(): void {
+      this.loadCount = 0;
         if (this.checkIFrameSubscription) {
             this.checkIFrameSubscription.unsubscribe();
         }
@@ -90,7 +93,6 @@ export class NgxDocViewerComponent implements OnChanges, OnDestroy {
             this.configuredViewer = this.viewer;
         }
         if (this.disableContent !== 'none' && this.viewer !== 'google') {
-
         }
         if ((changes.url && changes.url.currentValue !== changes.url.previousValue) ||
             changes.viewer && changes.viewer.currentValue !== changes.viewer.previousValue ||
@@ -154,6 +156,15 @@ export class NgxDocViewerComponent implements OnChanges, OnDestroy {
     }
 
     iframeLoaded() {
+      this.loadCount++;
+      if (this.configuredViewer === 'google') {
+        setTimeout(() => {
+          if (this.loadCount < 2) {
+            const iframe = this.iframes?.first?.nativeElement;
+            this.reloadIFrame(iframe);
+          }
+        }, 3000)
+      }
         this.loaded.emit(null);
         if (this.checkIFrameSubscription) {
             this.checkIFrameSubscription.unsubscribe();
